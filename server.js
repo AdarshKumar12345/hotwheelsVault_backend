@@ -21,24 +21,33 @@ connectDB();
 
 const app = express();
 
-// ─── CORS ─────────────────────────────────────────────────────────────────────
-// In production: only allow requests from the CLIENT_URL (Vercel domain).
-// In development: allow localhost:3000 as well.
+// ─── CORS Configuration ───────────────────────────────────────────────────────
+// Whitelist containing:
+// 1. CLIENT_URL from environment variables (your deployed Vercel URL)
+// 2. http://localhost:3000 (Next.js local development)
+// 3. http://127.0.0.1:3000 (Alternative local loopback)
 const allowedOrigins = [
-  process.env.CLIENT_URL,         // e.g. https://your-app.vercel.app
-  'http://localhost:3000',         // Next.js dev server
-  'http://localhost:3001',
+  process.env.CLIENT_URL,
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
 ].filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (curl, Postman, mobile apps)
+      // Allow requests with no origin (like mobile apps, curl, Postman)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error(`CORS: Origin '${origin}' not allowed`));
+      
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error(`CORS: Origin '${origin}' not allowed`));
+      }
     },
-    credentials: true,
+    credentials: true, // Allow cookies / Authorization header to be passed
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    optionsSuccessStatus: 204 // Response status for preflight OPTIONS requests (legacy browsers support)
   })
 );
 
