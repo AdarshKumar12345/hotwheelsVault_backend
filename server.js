@@ -38,11 +38,17 @@ app.use(
       // Allow requests with no origin (like mobile apps, curl, Postman)
       if (!origin) return callback(null, true);
       
+      // Check if origin is in the explicit whitelist
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
-      } else {
-        return callback(new Error(`CORS: Origin '${origin}' not allowed`));
       }
+      
+      // ALSO allow any deployment origin ending in .vercel.app (so Vercel preview/branch builds work without CORS pain!)
+      if (origin.endsWith('.vercel.app') || /^https:\/\/.*\.vercel\.app$/.test(origin)) {
+        return callback(null, true);
+      }
+      
+      return callback(new Error(`CORS: Origin '${origin}' not allowed`));
     },
     credentials: true, // Allow cookies / Authorization header to be passed
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
